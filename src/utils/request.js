@@ -85,8 +85,62 @@
 // export default service
 
 import axios from 'axios'
+import store from '@/store'
+import router from '@/router'
+import { Message } from 'element-ui'
+import { getTimeStamp } from '@/utils/auth'
+const timeOut = 3600000
+const service = axios.create({
+  // 当执行npm run dev 的时候 baseURL会指向env.development开发环境里的VUE_APP_BASE_API 变量所指的值
+  // /api 触发反向代理 执行跨域
 
-const service = axios.create()
-service.interceptors.request.use()
-service.interceptors.response.use()
-export default service()
+  baseURL: process.env.VUE_APP_BASE_API,
+  timeout: 5000
+})
+// 请求拦截器
+service.interceptors.request.use( config => {
+  // congig 是請求的配置信息
+  // config 是不許要返回的
+  if (store.getters.token) {
+    if(isCheckTokenTimeOut()) {
+      // token超时
+      store.dispatch('user/logout')
+      router.push('/login')
+      Promise.reject(new Error('token超时了'))
+    }
+    config.headers['Authorization'] = `Bearer ${store.getters.token}`
+  }
+  return config
+}, error => {
+  return Promise.reject(error)
+})
+// 响应拦截器
+service.interceptors.response.use( response => {
+  const { success, message, data } = response.data
+  if (success) {
+    return data
+  } else {
+    // 如果错误则 提示一个错误
+    Message.error(message)
+    // 执行执行链里面的catch() ，返回一个reject
+    return Promise.reject(new Error(message))
+  }
+}, error => {
+  if (error.response && error.response.data && error.response.data.code ===  10002) {
+    store.dispatch('user/logout')
+    router.push('/login')
+  } else {
+    Message.error(error.message) // 提示错误信息
+  }
+  return Promise.reject(error)
+   // 返回执行错误信息 跳出成功，执行catch
+})
+
+// 主动检测token超时的函数
+function isCheckTokenTimeOut() {
+  var currentTime = Date.now()
+  var timeStamp = getTimeStamp()
+  // 返回当前事件减去token注入的时间是否大于超时时间的布尔值
+  return (currentTime - timeStamp) / 1000 > timeOut
+}
+export default service
