@@ -50,6 +50,16 @@ export const constantRoutes = [
     component: () => import('@/views/404'),
     hidden: true
   },
+  // 公共导入excel页面
+  {
+    path: '/import',
+    component: Layout,
+    hidden: true,
+    children: [{
+      path: '',
+      component: () => import('@/views/import/index')
+    }]
+  },
 
   {
     path: '/',
