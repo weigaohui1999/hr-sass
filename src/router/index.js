@@ -13,6 +13,7 @@ import attendancesRouter from './modules/attendances'
 import salarysRouter from './modules/salarys'
 import settingRouter from './modules/setting'
 import socialRouter from './modules/social'
+import userRouter from './modules/user'
 
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -60,21 +61,18 @@ export const constantRoutes = [
       component: () => import('@/views/import/index')
     }]
   },
-
   {
     path: '/',
     component: Layout,
     redirect: '/dashboard',
     children: [{
       path: 'dashboard',
-      name: 'Dashboard',
+      name: 'dashboard',
       component: () => import('@/views/dashboard/index'),
       meta: { title: '首页', icon: 'dashboard' }
     }]
   },
-
-  // 404 page must be placed at the end !!!
-  { path: '*', redirect: '/404', hidden: true }
+  userRouter
 ]
 
 export const asyncRouter = [
@@ -85,12 +83,15 @@ export const asyncRouter = [
   attendancesRouter,
   salarysRouter,
   settingRouter,
-  socialRouter
+  socialRouter,
 ]
 const createRouter = () => new Router({
-  // mode: 'history', // require service support
+  // 路由有两种模式： 1.hash模式 前端路由模式，#后面的地址不会经过请求服务器  2.histoty模式：正常的/访问模式，特点是后端访问，任意地址的变化都会访问服务器
+  mode: 'history', // require service support
+  base: '/hr/', // 配置项目的基础地址
   scrollBehavior: () => ({ y: 0 }),
-  routes: [...constantRoutes, ...asyncRouter]
+  // routes: [...constantRoutes, ...asyncRouter] // 临时合并
+  routes: constantRoutes  // 路由权限之后的管理
 })
 
 const router = createRouter()

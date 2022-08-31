@@ -8,7 +8,7 @@
         <template v-slot:after>
           <el-button size="small" type="warning" @click="$router.push('/import?type=user')">导入</el-button>
           <el-button size="small" type="danger" @click="exportData">导出</el-button>
-          <el-button size="small" type="primary" @click="showDialog = true">新增员工</el-button>
+          <el-button size="small" :disabled="!checkPermission('aa')" type="primary" @click="showDialog = true">新增员工</el-button>
         </template>
       </page-tools>
 
@@ -46,7 +46,7 @@
               <el-button type="text" size="small">转正</el-button>
               <el-button type="text" size="small">调岗</el-button>
               <el-button type="text" size="small">离职</el-button>
-              <el-button type="text" size="small">角色</el-button>
+              <el-button type="text" size="small" @click="editRole(row.id)">角色</el-button>
               <el-button type="text" size="small" @click="delEmployee(row.id)">删除</el-button>
             </template>
           </el-table-column>
@@ -63,6 +63,7 @@
         <canvas ref="myCanvas" />
       </el-row>
     </el-dialog>
+    <assign-role ref="assianRole" :show-role-dialog.sync="showRoleDialog" :user-id="userId"/>
   </div>
 </template>
 
@@ -72,8 +73,9 @@ import EmployeeEnum from '@/api/constant/employees'
 import AddEmployee from '@/views/employees/components/add-employee'
 import { formatDate } from '@/filters'
 import QrCode from 'qrcode'
+import AssignRole from '@/views/employees/components/assign-role'
 export default {
-  components: { AddEmployee },
+  components: { AssignRole, AddEmployee },
   data() {
     return{
       list: [],
@@ -84,7 +86,9 @@ export default {
       },
       loading: false,
       showDialog: false,
-      showCodeDialog: false
+      showCodeDialog: false,
+      showRoleDialog: false,
+      userId: ''
     }
   },
   created() {
@@ -161,6 +165,11 @@ export default {
           QrCode.toCanvas(this.$refs.myCanvas, url)
         })
       }
+    },
+    async editRole(id) {
+      this.userId = id
+      this.showRoleDialog = true
+       await this.$refs.assianRole.getUserDetailById(id)
     }
   }
 }
